@@ -13,7 +13,7 @@ extern(C) void* fetchSuite( OfxPropertySetHandle hostHandle, const char* suiteNa
 		IHost host = *(cast(IHost*)hostHandle);
 		return host.fetchSuite(to!string(suiteName), suiteVersion);
 	} else {
-		writeln("fetchingSuite on null Host");
+		writeln("Host : plugin is asking for a Suite but host is null");
 		return null;
 	}
 }

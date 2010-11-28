@@ -5,6 +5,7 @@
 
 src/main.d
 src/openfx/c/core.d
+src/openfx/c/paramsuite.d
 src/openfx/c/propertysuite.d
 src/openfx/host/host.d
 src/openfx/host/suite/property/impl.d

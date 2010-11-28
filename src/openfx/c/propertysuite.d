@@ -2,6 +2,8 @@ module openfx.c.propertysuite;
 
 import openfx.c.core;
 
+static const string kOfxPropertySuite="OfxPropertySuite";
+
 extern (C) struct OfxPropertySuiteV1
 {
 	/** @brief Set a single value in a pointer property

@@ -66,7 +66,6 @@ TO adapt(TO, FROM)(FROM impl){
 		// casting immutability away sucks but openfx can't express constness nor immutability
 		return cast(char*)impl.toStringz;
 	} else static if(is(TO==string)&&is(FROM==const(char*))){
-		// casting immutability away sucks but openfx can't express constness nor immutability
 		return to!string(impl);
 	}else{
 		return impl;
@@ -190,7 +189,7 @@ class PropertySuite : PropertySet, Suite {
 	}
 	
 	string suiteName() const {
-		return "OfxPropertySuiteV1";
+		return kOfxPropertySuite;
 	}
 	
 	int suiteVersion() const {

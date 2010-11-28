@@ -5,12 +5,12 @@ import std.exception;
 import std.algorithm;
 
 class PropertySet {
-	package Property[string] map;
+	Property[string] map;
 	
 	void put(Property property){
 		enforce(property);
 		const auto propertyName = property.name;
-		enforce(propertyName !in map, new Exception("cannot put twice the property \""~propertyName~'"'));
+		enforce(propertyName !in map, new Exception("PropertySet : cannot put twice the property \""~propertyName~'"'));
 		map[propertyName] = property;
 	}
 	
