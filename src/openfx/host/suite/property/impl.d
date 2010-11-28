@@ -3,7 +3,7 @@ module openfx.host.suite.property.impl;
 import openfx.host.suite.property.propertyset;
 import openfx.host.suite.property.property;
 
-import openfx.c.core;
+import openfx.c.plugincore;
 import openfx.c.propertysuite;
 
 import std.exception;

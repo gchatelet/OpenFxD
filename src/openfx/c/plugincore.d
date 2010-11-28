@@ -1,4 +1,4 @@
-module openfx.c.core;
+module openfx.c.plugincore;
 
 alias void* OfxPropertySetHandle;
 

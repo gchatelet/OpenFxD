@@ -1,6 +1,6 @@
 module openfx.plugin.plugin;
 
-public import openfx.c.core;
+public import openfx.c.plugincore;
 
 interface PluginDescription {
 	@property const {

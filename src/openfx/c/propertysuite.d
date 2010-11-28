@@ -1,8 +1,9 @@
 module openfx.c.propertysuite;
 
+import openfx.c.plugincore;
 import openfx.c.core;
 
-static const string kOfxPropertySuite="OfxPropertySuite";
+const string kOfxPropertySuite="OfxPropertySuite";
 
 extern (C) struct OfxPropertySuiteV1
 {
