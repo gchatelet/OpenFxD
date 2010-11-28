@@ -1,0 +1,15 @@
+-odbin
+-ofbin/OpenFxD
+
+-Isrc
+
+src/main.d
+src/openfx/c/core.d
+src/openfx/c/propertysuite.d
+src/openfx/host/host.d
+src/openfx/host/suite/property/impl.d
+src/openfx/host/suite/property/property.d
+src/openfx/host/suite/property/propertyset.d
+src/openfx/plugin/plugin.d
+
+-L-ldl
