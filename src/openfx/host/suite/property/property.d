@@ -1,16 +1,28 @@
 module openfx.host.suite.property.property;
 
 enum PropertyType {
-	eNone = -1, eInt = 0, eDouble = 1, eString = 2, ePointer = 3
+	eInt = 0, eDouble = 1, eString = 2, ePointer = 3
 }
 
+// defining here as an abstract class so we
+// can benefit from Object.opEquals 
 abstract class Property {
-	@property string name() const;
-	@property PropertyType type() const;
+	private const string m_Name;
+	private const PropertyType m_Type;
+	this(string name, PropertyType type){ m_Name = name; m_Type = type; }
+	@property string name() const { return m_Name; }
+	@property PropertyType type() const { return m_Type; }
 	@property uint size() const;
 	void reset();
 	Property clone();
 	string toString() const;
+	
+	override bool opEquals(Object rhs){
+		auto that = cast(Property)rhs;
+		if(!that) return false;
+		return 	m_Name == that.m_Name &&
+				m_Type == that.m_Type;
+	}
 }
 
 PropertyType GetType(T)(){
@@ -33,7 +45,6 @@ import std.string;
 
 final class TProperty(T) : Property {
 	alias T TYPE;
-	private const string m_Name;
 	T[] defaultValue;
 	T[] value;
 
@@ -47,20 +58,12 @@ final class TProperty(T) : Property {
 		this(name, values, new T[values.length]);
 	}
 	this(string name, T[] values, T[] defaultValues){
+		super(name, GetType!T());
 		enforce(name && name.length>0, new Exception("Property name must not be null nor empty"));
-		m_Name = name;
 		defaultValue = defaultValues;
 		value = values;
 	}
 	
-	@property string name() const {
-		return m_Name;
-	}
-	
-	@property PropertyType type() const {
-		return GetType!T();
-	}
-
 	void reset(){
 		value = defaultValue.dup;
 	}
@@ -70,14 +73,13 @@ final class TProperty(T) : Property {
 	}
 	
 	Property clone() {
-		return new TProperty!T(m_Name, value, defaultValue);
+		return new TProperty!T(m_Name, value.dup, defaultValue.dup);
 	}
 	
 	override bool opEquals(Object rhs){
 		auto that = cast(TProperty!T)rhs;
-		if(!that)
-			return false;
-		return 	name == that.name &&
+		if(!that) return false;
+		return 	super.opEquals(that) &&
 				value == that.value &&
 				defaultValue == that.defaultValue;
 	}
@@ -92,8 +94,10 @@ alias TProperty!(string)	StringProperty;
 alias TProperty!(double)	DoubleProperty;
 alias TProperty!(void*)		PointerProperty;
 
-import std.range;
-import std.stdio;
+version(unittest){
+	import std.range;
+	import std.stdio;
+}
 // empty name
 unittest {
 	try{
@@ -161,4 +165,11 @@ unittest {
 	assert( p1 == clone );
 	clone.reset();
 	assert( p1 != clone );
+}
+// clone does not share data
+unittest {
+	auto p1 = new IntProperty("name",[1,2,3]);
+	auto clone = cast(IntProperty)p1.clone();
+	clone.value[0] = 5;
+	assert( p1.value[0] == 1 );
 }
