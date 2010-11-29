@@ -46,7 +46,8 @@ import std.range;
 import std.algorithm;
 
 class KeyframableParameter(T) : Parameter {
-	T[double] keyToValueMap;
+	private T[double] keyToValueMap;
+	
 	@property override bool isKeyframable() const { return true; }
 	@property bool isKeyframed() const{ return keyToValueMap.length>1; }
 	this(string name){
@@ -63,21 +64,47 @@ class KeyframableParameter(T) : Parameter {
 		return other;
 	}
 	
-	T getValue() const {
-		if(!keyToValueMap.length)
-			return T.init;
-		double[] keys = keyToValueMap.keys;
+	T getValue(double atTime) const {
+		const size_t mapSize = keyToValueMap.length;
+		if(mapSize==0)
+		    throw new Exception("Parameter '"~name~"' has no keys and therefore no value");
+		if(mapSize==1)
+			return keyToValueMap.front;
+		if(atTime in keyToValueMap)
+			return keyToValueMap[atTime]; 
+		auto keys = keyToValueMap.keys;
 		sort(keys);
-		return keyToValueMap[keys.front];
+		if(atTime < keys.front)
+		    return keyToValueMap[keys.front];
+		if(atTime > keys.back)
+			return keyToValueMap[keys.back];
+		auto keysAfterAtTime = find!("a<b")(keys, atTime);
+		return interpolate(atTime, keysAfterAtTime[0], keysAfterAtTime[1]);
 	}
-		
+	
+	protected T interpolate(double at, double before, double after) const {
+		return keyToValueMap[before];
+	} 
+	
+	void setValue(T value, double atTime) {
+		keyToValueMap[atTime] = value;
+	}
+	
+	void deleteKey(double atTime){
+		keyToValueMap.remove(atTime);
+	}
+	
+	void deleteAllKey(){
+		keyToValueMap.clear();
+	}
+	
 	string toString() const {
 		double[] keys = keyToValueMap.keys;
 		sort(keys);
 		string map;
 		foreach(i, key;keys){
 			if(i!=0) map~=", ";
-			map~=to!string(key)~':'~keyToValueMap[key];
+			map~=to!string(key)~':'~to!string(keyToValueMap[key]);
 		}
 		return format("%-18s '%s'\t[%s]", to!string(type), name, map);
 	}
@@ -93,14 +120,35 @@ class KeyframableParameter(T) : Parameter {
 
 class InterpolableParameter(T) : KeyframableParameter!T {
 	@property bool isInterpolable() const{ return true; }
+		
+	this(string name){
+		super(name);
+	}
+
+	protected T interpolate(double at, double before, double after) const {
+		auto ratio = (at-before)/(after-before);
+		auto leftValue = keyToValueMap[before]; 
+		auto rightValue = keyToValueMap[after]; 
+		return cast(T)doubleInterpolate(leftValue, rightValue, ratio);
+	}
+	 
+	private final double doubleInterpolate(double left, double right, double ratio) const {
+		return left*(1-ratio)+right*ratio;
+	}
 }
 
-pure ParameterType GetType(T)(){
+ParameterType GetType(T)(){
 	static if(is(T==string))
 		return ParameterType.eStringParam;
+	else static if(is(T==int))
+		return ParameterType.eIntParam;
+	else static if(is(T==double))
+		return ParameterType.eDoubleParam;
 }
 
 alias KeyframableParameter!string StringParameter;
+alias InterpolableParameter!int IntParameter;
+alias InterpolableParameter!double DoubleParameter;
 
 version (unittest){
 	import std.stdio;
@@ -128,15 +176,47 @@ unittest {
 	assert( p != clone );
 }
 
-// basic getValue
+// basic getValue no interpolation
 unittest {
 	auto p = new StringParameter("name");
-	assert( p.getValue() == "" );
-	p.keyToValueMap[0]="zero";
-	assert( p.getValue() == "zero" );
-	p.keyToValueMap[2]="two";
-	assert( p.getValue() == "zero" );
-	p.keyToValueMap[-1]="minusone";
-	assert( p.getValue() == "minusone" );
-	writeln(p);
+	try{ p.getValue(0); assert(false); } catch(Exception e){}
+	
+	p.setValue("zero", 0);
+	assert( p.getValue(0) == "zero" );
+	assert( p.getValue(-1) == "zero" );
+	assert( p.getValue(1) == "zero" );
+	
+	p.setValue("two", 2);
+	assert( p.getValue(0) == "zero" );
+	assert( p.getValue(-1) == "zero" );
+	assert( p.getValue(1) == "zero" );
+	assert( p.getValue(2) == "two" );
+	assert( p.getValue(3) == "two" );
+}
+
+// basic getValue interpolation
+unittest {
+	{
+		auto p = new IntParameter("name");
+		try{ p.getValue(0); assert(false); } catch(Exception e){}
+		
+		p.setValue(0, 0);
+		assert( p.getValue(0) == 0 );
+		assert( p.getValue(-1) == 0 );
+		assert( p.getValue(1) == 0 );
+		
+		p.setValue(2, 2);
+		assert( p.getValue(0) == 0 );
+		assert( p.getValue(-1) == 0 );
+		assert( p.getValue(1) == 1 );
+		assert( p.getValue(2) == 2 );
+		assert( p.getValue(3) == 2 );
+	}
+
+	{	
+		auto p = new DoubleParameter("name");
+		p.setValue(0,0);
+		p.setValue(2,2);
+		assert( p.getValue(1.11) == 1.11 );
+	}
 }
