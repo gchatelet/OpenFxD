@@ -46,7 +46,14 @@ import std.range;
 import std.algorithm;
 
 class KeyframableParameter(T) : Parameter {
-	private T[double] keyToValueMap;
+	static if(is(T:int[]))
+		alias int[] ReturnType;
+	else static if (is(T:double[]))
+		alias double[] ReturnType;
+	else
+		alias T ReturnType;
+		
+	private ReturnType[double] keyToValueMap;
 	
 	@property override bool isKeyframable() const { return true; }
 	@property bool isKeyframed() const{ return keyToValueMap.length>1; }
@@ -64,7 +71,7 @@ class KeyframableParameter(T) : Parameter {
 		return other;
 	}
 	
-	T getValue(double atTime) const {
+	const(ReturnType) getValue(double atTime) const {
 		const size_t mapSize = keyToValueMap.length;
 		if(mapSize==0)
 		    throw new Exception("Parameter '"~name~"' has no keys and therefore no value");
@@ -82,11 +89,11 @@ class KeyframableParameter(T) : Parameter {
 		return interpolate(atTime, keysAfterAtTime[0], keysAfterAtTime[1]);
 	}
 	
-	protected T interpolate(double at, double before, double after) const {
+	protected const(ReturnType) interpolate(double at, double before, double after) const {
 		return keyToValueMap[before];
-	} 
+	}
 	
-	void setValue(T value, double atTime) {
+	void setValue(double atTime, ReturnType value) {
 		keyToValueMap[atTime] = value;
 	}
 	
@@ -125,16 +132,28 @@ class InterpolableParameter(T) : KeyframableParameter!T {
 		super(name);
 	}
 
-	protected T interpolate(double at, double before, double after) const {
-		auto ratio = (at-before)/(after-before);
-		auto leftValue = keyToValueMap[before]; 
-		auto rightValue = keyToValueMap[after]; 
-		return cast(T)doubleInterpolate(leftValue, rightValue, ratio);
+	protected pure const(ReturnType) interpolate(double at, double timeBefore, double timeAfter) const {
+		auto ratio = (at-timeBefore)/(timeAfter-timeBefore);
+		const ReturnType leftValue = keyToValueMap[timeBefore];
+		const ReturnType rightValue = keyToValueMap[timeAfter]; 
+		return .interpolate(ratio, leftValue, rightValue);
 	}
 	 
-	private final double doubleInterpolate(double left, double right, double ratio) const {
-		return left*(1-ratio)+right*ratio;
-	}
+}
+
+private pure final const(T) interpolate(T)(in double ratio, in T left, in T right) {
+	static if (is(T:const double)) {
+		return cast(T)(left*(1-ratio)+right*ratio);
+	} else {
+		static if(is(T == const(int[])))
+			alias int[] TYPE;
+		static if(is(T == const(double[])))
+			alias double[] TYPE;
+		TYPE value;
+		for(int i=0;i<left.length;++i)
+			value~=interpolate(ratio,left[i],right[i]);
+		return value;
+	} 
 }
 
 ParameterType GetType(T)(){
@@ -142,13 +161,59 @@ ParameterType GetType(T)(){
 		return ParameterType.eStringParam;
 	else static if(is(T==int))
 		return ParameterType.eIntParam;
+	else static if(is(T==int2))
+		return ParameterType.eInt2DParam;
+	else static if(is(T==int3))
+		return ParameterType.eInt3DParam;
 	else static if(is(T==double))
 		return ParameterType.eDoubleParam;
+	else static if(is(T==double2))
+		return ParameterType.eDouble2DParam;
+	else static if(is(T==double3))
+		return ParameterType.eDouble3DParam;
+	else static if(is(T==rgb))
+		return ParameterType.eRGBParam;
+	else static if(is(T==rgba))
+		return ParameterType.eRGBAParam;
+	else static if(is(T==bool))
+		return ParameterType.eBooleanParam;
 }
 
-alias KeyframableParameter!string StringParameter;
-alias InterpolableParameter!int IntParameter;
-alias InterpolableParameter!double DoubleParameter;
+private size_t GetCount(ParameterType type){
+	switch(type){
+		case ParameterType.eBooleanParam:
+		case ParameterType.eIntParam:
+		case ParameterType.eDoubleParam:
+		return 1;
+		case ParameterType.eInt2DParam:
+		case ParameterType.eDouble2DParam:
+		return 2;
+		case ParameterType.eInt3DParam:
+		case ParameterType.eDouble3DParam:
+		case ParameterType.eRGBParam:
+		return 3;
+		case ParameterType.eRGBAParam:
+		return 4;
+	}
+}
+
+alias int[2]						int2;
+alias int[3]						int3;
+alias double[2]						double2;
+alias double[3]						double3;
+alias double[3]						rgb;
+alias double[4]						rgba;
+
+alias KeyframableParameter!bool		BooleanParameter;
+alias KeyframableParameter!string	StringParameter;
+alias InterpolableParameter!int 	IntParameter;
+alias InterpolableParameter!int2 	Int2DParameter;
+alias InterpolableParameter!int3 	Int3DParameter;
+alias InterpolableParameter!double 	DoubleParameter;
+alias InterpolableParameter!double2 Double2DParameter;
+alias InterpolableParameter!double3 Double3DParameter;
+alias InterpolableParameter!rgb		RgbParameter;
+alias InterpolableParameter!rgba	RgbaParameter;
 
 version (unittest){
 	import std.stdio;
@@ -181,12 +246,12 @@ unittest {
 	auto p = new StringParameter("name");
 	try{ p.getValue(0); assert(false); } catch(Exception e){}
 	
-	p.setValue("zero", 0);
+	p.setValue(0, "zero");
 	assert( p.getValue(0) == "zero" );
 	assert( p.getValue(-1) == "zero" );
 	assert( p.getValue(1) == "zero" );
 	
-	p.setValue("two", 2);
+	p.setValue(2, "two");
 	assert( p.getValue(0) == "zero" );
 	assert( p.getValue(-1) == "zero" );
 	assert( p.getValue(1) == "zero" );
@@ -218,5 +283,13 @@ unittest {
 		p.setValue(0,0);
 		p.setValue(2,2);
 		assert( p.getValue(1.11) == 1.11 );
+	}
+	
+	{	
+		auto p = new RgbaParameter("name");
+		p.setValue(0,[0,1,2,3]);
+		p.setValue(2,[1,2,4,6]);
+		writeln(p.getValue(1));
+		assert( p.getValue(1) == [0.5,1.5,3,4.5] );
 	}
 }

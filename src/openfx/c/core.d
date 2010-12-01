@@ -26,22 +26,6 @@ string kOfxActionBeginInstanceEdit="OfxActionBeginInstanceEdit";
 /** @brief Action called when an instance has the last editor closed */
 string kOfxActionEndInstanceEdit="OfxActionEndInstanceEdit";
 
-/*@}*/
-
-/**
- * \defgroup PropertiesAll Ofx Properties
- *
- * These strings are used to identify properties within OFX, they are broken up by the host suite or API they relate to.
- */
-/*@{*/
-
-/**
- * \defgroup PropertiesGeneral General Properties
- *
- * These properties are general properties and  apply to may objects across OFX
- */
-/*@{*/
-
 /** @brief General property used to get/set the time of something.
  *
  *  - Type - double X 1
