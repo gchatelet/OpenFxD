@@ -58,6 +58,7 @@ public:
 	}
 	
 	final void* fetchSuite(in string suiteName, in int suiteVersion) const{
+		writeln("trying to find suite ",suiteName);
 		foreach(suite;m_Suites)
 			if( suite.suiteVersion == suiteVersion && suite.suiteName == suiteName )
 				return suite.getHandle();

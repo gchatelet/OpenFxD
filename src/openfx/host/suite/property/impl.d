@@ -1,5 +1,7 @@
 module openfx.host.suite.property.impl;
 
+import openfx.host.suite.exception;
+
 import openfx.host.suite.property.propertyset;
 import openfx.host.suite.property.property;
 
@@ -11,27 +13,6 @@ import std.conv;
 import std.stdio;
 import std.range;
 import std.string;
-
-final class SuiteException : Exception {
-	const OfxStatus status;
-	this(OfxStatus status, string message){
-		super(message~" - returning "~to!string(status));
-		this.status = status;
-	}
-}
-
-OfxStatus check(void delegate() f){
-	try{
-		f();
-		return OfxStatus.kOfxStatOK;
-	} catch(SuiteException e){
-		writeln(e.msg);
-		return e.status;
-	} catch(Exception e){
-		writeln(e);
-		return OfxStatus.kOfxStatErrFatal;
-	}
-}
 
 Property getRawProperty(OfxPropertySetHandle properties, const char* property){
 	if(properties==null)
