@@ -10,7 +10,7 @@ import std.range;
 
 extern(C) void* fetchSuite( OfxPropertySetHandle hostHandle, const char* suiteName, int suiteVersion ){
 	if(hostHandle) {
-		IHost host = *(cast(IHost*)hostHandle);
+		BasicHost host = *(cast(BasicHost*)hostHandle);
 		return host.fetchSuite(to!string(suiteName), suiteVersion);
 	} else {
 		writeln("Host : plugin is asking for a Suite but host is null");
@@ -24,12 +24,9 @@ interface Suite {
 	void* getHandle() const;
 }
 
-interface IHost {
-	bool support(in PluginDescription) const;
-	void* fetchSuite(in string suiteName, in int suiteVersion) const;
-}
+import openfx.host.suite.property.propertyset;
 
-abstract class Host : IHost {
+abstract class BasicHost : PropertySet {
 private:
 	Binary.Plugin[] m_Plugins;
 	Suite[] m_Suites;
@@ -44,7 +41,7 @@ public:
 	}
 	
 	void loadPlugins(string rootPath) {
-		IHost pBase = this; // getting base
+		BasicHost pBase = this; // getting base
 		m_ofxHost.host = &pBase;
 		m_ofxHost.fetchSuite = &.fetchSuite;
 		enforce(isdir(rootPath));
@@ -58,13 +55,14 @@ public:
 	}
 	
 	final void* fetchSuite(in string suiteName, in int suiteVersion) const{
-		writeln("trying to find suite ",suiteName);
 		foreach(suite;m_Suites)
 			if( suite.suiteVersion == suiteVersion && suite.suiteName == suiteName )
 				return suite.getHandle();
 		writeln("Host : plugin asked for unavailable "~suiteName~":"~to!string(suiteVersion));
 		return null;
 	}
+	
+	abstract bool support(in PluginDescription) const;
 }
 
 import std.loader;
@@ -152,7 +150,7 @@ private:
 		}
 		
 		// host can be set only once
-		void setHost(ref Host host){
+		void setHost(ref BasicHost host){
 			enforce(host);
 			enforce(!m_HostSet);
 			m_pPlugin.setHost( &(host.m_ofxHost) );

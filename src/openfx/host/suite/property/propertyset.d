@@ -1,5 +1,6 @@
 module openfx.host.suite.property.propertyset;
 
+import openfx.c.plugincore;
 import openfx.host.suite.property.property;
 import std.exception;
 import std.algorithm;
@@ -12,6 +13,22 @@ class PropertySet {
 		const auto propertyName = property.name;
 		enforce(propertyName !in map, new Exception("PropertySet : cannot put twice the property \""~propertyName~'"'));
 		map[propertyName] = property;
+	}
+	
+	void putString(string name, string value){
+		put(new StringProperty(name,value));
+	}
+	
+	void putInt(string name, int value){
+		put(new IntProperty(name,value));
+	}
+	
+	void putDouble(string name, double value){
+		put(new DoubleProperty(name,value));
+	}
+	
+	void putPointer(string name, void* value){
+		put(new PointerProperty(name,value));
 	}
 	
 	string toString() const{

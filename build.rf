@@ -4,17 +4,27 @@
 -Isrc
 
 src/main.d
+src/openfx/c/attribute.d
 src/openfx/c/core.d
-src/openfx/c/paramsuite.d
+src/openfx/c/imageeffectsuite.d
+src/openfx/c/memorysuite.d
+src/openfx/c/messagesuite.d
+src/openfx/c/multithreadsuite.d
+src/openfx/c/parametersuite.d
 src/openfx/c/plugincore.d
 src/openfx/c/propertysuite.d
 src/openfx/host/host.d
+src/openfx/host/imageeffecthost.d
 src/openfx/host/suite/exception.d
-src/openfx/host/suite/param/impl.d
+src/openfx/host/suite/imageeffectsuite.d
+src/openfx/host/suite/memorysuite.d
+src/openfx/host/suite/messagesuite.d
+src/openfx/host/suite/multithreadsuite.d
 src/openfx/host/suite/param/parameter.d
-src/openfx/host/suite/property/impl.d
+src/openfx/host/suite/paramsuite.d
 src/openfx/host/suite/property/property.d
 src/openfx/host/suite/property/propertyset.d
+src/openfx/host/suite/propertysuite.d
 src/openfx/plugin/plugin.d
 
 -L-ldl

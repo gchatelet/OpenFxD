@@ -8,7 +8,7 @@ import std.stdio;
 final class SuiteException : Exception {
 	const OfxStatus status;
 	this(OfxStatus status, string message){
-		super(message~" - returning "~to!string(status));
+		super(message~" - returning "~.toString(status));
 		this.status = status;
 	}
 }
@@ -16,12 +16,12 @@ final class SuiteException : Exception {
 OfxStatus check(void delegate() f){
 	try{
 		f();
-		return OfxStatus.kOfxStatOK;
+		return kOfxStatOK;
 	} catch(SuiteException e){
 		writeln(e.msg);
 		return e.status;
 	} catch(Exception e){
 		writeln(e);
-		return OfxStatus.kOfxStatErrFatal;
+		return kOfxStatErrFatal;
 	}
 }

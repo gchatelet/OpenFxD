@@ -1,4 +1,4 @@
-module openfx.c.paramsuite;
+module openfx.c.parametersuite;
 
 import openfx.c.plugincore;
 import openfx.c.core;
