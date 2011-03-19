@@ -76,7 +76,7 @@ class KeyframableParameter(T) : Parameter {
 		if(mapSize==0)
 		    throw new Exception("Parameter '"~name~"' has no keys and therefore no value");
 		if(mapSize==1)
-			return keyToValueMap.front;
+			return keyToValueMap[keyToValueMap.keys.front];
 		if(atTime in keyToValueMap)
 			return keyToValueMap[atTime]; 
 		auto keys = keyToValueMap.keys;
