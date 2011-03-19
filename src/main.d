@@ -13,8 +13,7 @@ import std.stdio;
 import std.string;
 import std.conv;
 
-static string rootPlugin = "/home/clitte/workspace/TuttleOFX/TuttleOFX/dist/plugins";
-
+const string OFX_PLUGIN_PATH="OFX_PLUGIN_PATH";
 
 class MyHost : ImageEffectHost {
 	bool support(in PluginDescription plugin) const {
@@ -31,6 +30,9 @@ class MyHost : ImageEffectHost {
 }
 
 void main(){
+	const string ofxpluginPath = std.process.getenv(OFX_PLUGIN_PATH);
+	std.exception.enforce(ofxpluginPath,"no "~OFX_PLUGIN_PATH~" environement variable is defined. Aborting.");
+	
 	Suite propertySuite = new PropertySuite;
 	Suite paramSuite = new ParameterSuite;
 	Suite imageEffectSuite = new ImageEffectSuite;
@@ -38,5 +40,6 @@ void main(){
 	Suite multithreadSuite = new MultithreadSuite;
 	Suite messageSuite = new MessageSuiteV1;
 	BasicHost host = new MyHost([propertySuite, paramSuite, imageEffectSuite, memorySuite, multithreadSuite, messageSuite]);
-	host.loadPlugins(rootPlugin);
+	
+	host.loadPlugins(ofxpluginPath);
 }
